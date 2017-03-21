@@ -9,7 +9,9 @@
 #define PC 15
 
 int add(int a, int b);
-int sub(int a,int b);
+int sub(int a, int b);
+int mov(int a, int b);
+
 struct arm_state {
     unsigned int regs[NREGS];
     unsigned int cpsr;
@@ -98,6 +100,34 @@ void armemu_sub(struct arm_state *state)
   }
 }
 
+bool is_mov_inst(unsigned int iw)
+{
+  unsigned int op;
+  unsigned int opcode;
+
+  op = (iw >> 26) & 0b11;
+  opcode = (iw >> 21) & 0b1111;
+
+  return (op == 0) && (opcode == 0b1101);
+}
+
+void armemu_mov(struct arm_state *state)
+{
+  unsigned int iw;
+  unsigned int rd, rn, rm;
+
+  iw = *((unsigned int *) state->regs[PC]);
+
+  rd = (iw >> 12) & 0xF;
+  rn = (iw >> 16) & 0xF;
+  rm = iw & 0xF;
+
+  state->regs[rd] = state->regs[rm];
+  if (rd != PC) {
+    state->regs[PC] = state->regs[PC] + 4;
+  }
+}
+
 bool is_bx_inst(unsigned int iw)
 {
     unsigned int bx_code;
@@ -132,6 +162,9 @@ void armemu_one(struct arm_state *state)
     else if (is_sub_inst(iw)){
       armemu_sub(state);
     }
+    else if (is_mov_inst(iw)){
+      armemu_mov(state);
+     }
 }
 
 
@@ -152,7 +185,8 @@ int main(int argc, char **argv)
     unsigned int r;
     
     //init_arm_state(&state, (unsigned int *) add, 1, 2, 0, 0);
-    init_arm_state(&state, (unsigned int *) sub, 2, 1, 0, 0);
+    //init_arm_state(&state, (unsigned int *) sub, 2, 1, 0, 0);
+    init_arm_state(&state, (unsigned int *) mov, 2, 1, 0, 0);
     r = armemu(&state);
     printf("r = %d\n", r);
   
