@@ -11,7 +11,7 @@
 int add(int a, int b);
 int sub(int a, int b);
 int mov(int a, int b);
-
+int str(int a,int b);
 struct arm_state {
     unsigned int regs[NREGS];
     unsigned int cpsr;
@@ -94,7 +94,7 @@ void armemu_str(struct arm_state *state)
   rn = (iw >> 16) & 0xF;
   rm = iw & 0xF;
 
-  rn = state->regs[rd]; 
+  state->regs[rn] = state->regs[rd]; 
   if (rd != PC) {
     state->regs[PC] = state->regs[PC] + 4;
   }
@@ -122,7 +122,7 @@ void armemu_ldr(struct arm_state *state)
   rn = (iw >> 16) & 0xF;
   rm = iw & 0xF;
 
-  state->regs[rd]=rn;
+  state->regs[rd]=state->regs[rn];
   if (rd != PC) {
     state->regs[PC] = state->regs[PC] + 4;
   }
@@ -221,6 +221,12 @@ void armemu_one(struct arm_state *state)
     else if (is_mov_inst(iw)){
       armemu_mov(state);
      }
+    else if(is_str_inst(iw)){
+      armemu_str(state);
+    }
+    else if(is_ldr_inst(iw)){
+      armemu_ldr(state);
+    }
 }
 
 
@@ -242,7 +248,8 @@ int main(int argc, char **argv)
     
     //init_arm_state(&state, (unsigned int *) add, 1, 2, 0, 0);
     //init_arm_state(&state, (unsigned int *) sub, 2, 1, 0, 0);
-    init_arm_state(&state, (unsigned int *) mov, 2, 1, 0, 0);
+    //init_arm_state(&state, (unsigned int *) mov, 2, 1, 0, 0);
+    init_arm_state(&state, (unsigned int *) str, 1, 4, 0, 0);  
     r = armemu(&state);
     printf("r = %d\n", r);
   

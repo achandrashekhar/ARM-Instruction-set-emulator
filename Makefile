@@ -9,10 +9,12 @@ sub.o : sub.s
 mov.o :  mov.s
 	as -o mov.o mov.s
 
+str.o : str.s
+	as -o str.o str.s
 
-armemu : armemu.c mov.o
-	gcc -o armemu armemu.c mov.o
+armemu : armemu.c str.o
+	gcc -o armemu armemu.c str.o
 
 clean:
-	rm -rf armemu mov.o
+	rm -rf armemu str.o
 
