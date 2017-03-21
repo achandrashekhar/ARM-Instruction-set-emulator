@@ -1,7 +1,0 @@
-.global str
-.func str
-
-str:
-	str r0, [r1]
-	ldr r0, [r1]
-	bx lr
