@@ -72,6 +72,62 @@ void armemu_add(struct arm_state *state)
     }
 }
 
+bool is_str_inst(unsigned int iw)
+{
+  unsigned int op;
+  unsigned int lbit;
+
+  op = (iw >> 26) & 0b11;
+  lbit = (iw >> 20) & 0b1;
+
+  return (op == 01) && (lbit == 0b0);
+}
+
+void armemu_str(struct arm_state *state)
+{
+  unsigned int iw;
+  unsigned int rd, rn, rm;
+
+  iw = *((unsigned int *) state->regs[PC]);
+
+  rd = (iw >> 12) & 0xF;
+  rn = (iw >> 16) & 0xF;
+  rm = iw & 0xF;
+
+  rn = state->regs[rd]; 
+  if (rd != PC) {
+    state->regs[PC] = state->regs[PC] + 4;
+  }
+}
+
+bool is_ldr_inst(unsigned int iw)
+{
+  unsigned int op;
+  unsigned int lbit;
+
+  op = (iw >> 26) & 0b11;
+  lbit = (iw >> 20) & 0b1;
+
+  return (op == 01) && (lbit == 0b1);
+}
+
+void armemu_ldr(struct arm_state *state)
+{
+  unsigned int iw;
+  unsigned int rd, rn, rm;
+
+  iw = *((unsigned int *) state->regs[PC]);
+
+  rd = (iw >> 12) & 0xF;
+  rn = (iw >> 16) & 0xF;
+  rm = iw & 0xF;
+
+  state->regs[rd]=rn;
+  if (rd != PC) {
+    state->regs[PC] = state->regs[PC] + 4;
+  }
+}
+
 bool is_sub_inst(unsigned int iw)
 {
   unsigned int op;
