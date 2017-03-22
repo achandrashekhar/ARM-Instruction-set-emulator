@@ -12,6 +12,7 @@ int add(int a, int b);
 int sub(int a, int b);
 int mov(int a, int b);
 int str(int a,int b);
+int b(int a,int b);
 struct arm_state {
     unsigned int regs[NREGS];
     unsigned int cpsr;
@@ -184,6 +185,33 @@ void armemu_mov(struct arm_state *state)
   }
 }
 
+bool is_b_inst(unsigned int iw)
+{
+  unsigned int b_code;
+
+  b_code = (iw >> 27) & 0b111;
+
+  return (b_code==0b101);
+}
+
+void armemu_b(struct arm_state *state)
+{
+  printf("going here");
+  unsigned int offset_check,offset_address,offset_check_bit;
+  offset_check = *((unsigned int *) state->regs[PC]);
+  offset_check = (offset_check>>24) & 0xFFFFFF;
+  offset_check = offset_check<<2;
+  offset_check_bit = (offset_check>>23) & 0b1;
+    if(offset_check_bit==1){
+      offset_address = 0xFF000000|offset_check;
+    }
+    else {
+      offset_address = 0x00000000|offset_check;
+    }
+    printf("\n %d is the offset address ",offset_address);
+    state->regs[PC]=state->regs[PC]+8+offset_address;  
+}
+
 bool is_bx_inst(unsigned int iw)
 {
     unsigned int bx_code;
@@ -227,6 +255,13 @@ void armemu_one(struct arm_state *state)
     else if(is_ldr_inst(iw)){
       armemu_ldr(state);
     }
+    else if(is_b_inst(iw)){
+      printf("\ngoing here");
+      armemu_b(state);
+    }
+    else {
+      printf("\n Instruction not found");
+    }
 }
 
 
@@ -249,7 +284,8 @@ int main(int argc, char **argv)
     //init_arm_state(&state, (unsigned int *) add, 1, 2, 0, 0);
     //init_arm_state(&state, (unsigned int *) sub, 2, 1, 0, 0);
     //init_arm_state(&state, (unsigned int *) mov, 2, 1, 0, 0);
-    init_arm_state(&state, (unsigned int *) str, 1, 4, 0, 0);  
+    //init_arm_state(&state, (unsigned int *) str, 1, 4, 0, 0);  
+    init_arm_state(&state, (unsigned int *) b, 1, 1, 0, 0);  
     r = armemu(&state);
     printf("r = %d\n", r);
   

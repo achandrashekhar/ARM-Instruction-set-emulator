@@ -12,9 +12,12 @@ mov.o :  mov.s
 str.o : str.s
 	as -o str.o str.s
 
-armemu : armemu.c str.o
-	gcc -o armemu armemu.c str.o
+b.o : b.s
+	as -o b.o b.s
+
+armemu : armemu.c b.o
+	gcc -o armemu armemu.c b.o
 
 clean:
-	rm -rf armemu str.o
+	rm -rf armemu b.o
 
