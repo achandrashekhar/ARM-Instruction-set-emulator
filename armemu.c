@@ -189,7 +189,7 @@ bool is_b_inst(unsigned int iw)
 {
   unsigned int b_code;
 
-  b_code = (iw >> 27) & 0b111;
+  b_code = (iw >> 25) & 0b111;
 
   return (b_code==0b101);
 }
@@ -199,8 +199,7 @@ void armemu_b(struct arm_state *state)
   printf("going here");
   unsigned int offset_check,offset_address,offset_check_bit;
   offset_check = *((unsigned int *) state->regs[PC]);
-  offset_check = (offset_check>>24) & 0xFFFFFF;
-  offset_check = offset_check<<2;
+  offset_check = offset_check & 0x00FFFFFF;
   offset_check_bit = (offset_check>>23) & 0b1;
     if(offset_check_bit==1){
       offset_address = 0xFF000000|offset_check;
@@ -208,6 +207,7 @@ void armemu_b(struct arm_state *state)
     else {
       offset_address = 0x00000000|offset_check;
     }
+    offset_address = (offset_address<<2);
     printf("\n %d is the offset address ",offset_address);
     state->regs[PC]=state->regs[PC]+8+offset_address;  
 }
