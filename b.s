@@ -2,8 +2,7 @@
 	.func b
 
 b:	
-	add r0, r0, r1
-	b loop
+	cmp r0,r1
+	beq loop
 	add r0,r0,r1
-loop:	add r0,r0,r1
-	bx lr
+loop:	bx lr

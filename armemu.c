@@ -185,6 +185,39 @@ void armemu_mov(struct arm_state *state)
   }
 }
 
+bool is_cmp_inst(unsigned int iw)
+{
+  unsigned int op;
+  unsigned int opcode;
+
+  op = (iw >> 26) & 0b11;
+  opcode = (iw >> 21) & 0b1111;
+
+  return (op == 0) && (opcode == 0b1010);
+}
+
+void armemu_cmp(struct arm_state *state)
+{
+  unsigned int iw;
+  unsigned int rd, rn, rm,result;
+
+  iw = *((unsigned int *) state->regs[PC]);
+
+  rd = (iw >> 12) & 0xF;
+  rn = (iw >> 16) & 0xF;
+  rm = iw & 0xF;
+
+  result= state->regs[rn] - state->regs[rm];
+  if(result==0){
+    state->cpsr = state->cpsr|0x40000000;
+  } else {
+    state->cpsr = state->cpsr | 0x00000000;
+  }
+  if (rd != PC) {
+    state->regs[PC] = state->regs[PC] + 4;
+  }
+}
+
 bool is_b_inst(unsigned int iw)
 {
   unsigned int b_code;
@@ -192,6 +225,31 @@ bool is_b_inst(unsigned int iw)
   b_code = (iw >> 25) & 0b111;
 
   return (b_code==0b101);
+}
+
+bool is_beq_inst(unsigned int iw)
+{
+  unsigned int beq_code;
+
+  beq_code = (iw >> 28) & 0b1111;
+
+  return (beq_code==0b0000);
+}
+
+void armemu_beq(struct arm_state *state)
+{
+  unsigned int iw,z_check_bit;
+  unsigned int rd, rn, rm,result;
+
+  iw = *((unsigned int *) state->regs[PC]);
+  z_check_bit = state->cpsr;
+  z_check_bit = (z_check_bit>>30) & 0b1;
+  if(z_check_bit==1){
+    armemu_b(state);
+  }
+  else {
+    state->regs[PC] = state->regs[PC] + 4;
+  }
 }
 
 void armemu_b(struct arm_state *state)
@@ -255,9 +313,15 @@ void armemu_one(struct arm_state *state)
     else if(is_ldr_inst(iw)){
       armemu_ldr(state);
     }
+    else if(is_cmp_inst(iw)){
+      armemu_cmp(state);
+    }
     else if(is_b_inst(iw)){
-      printf("\ngoing here");
+      if(is_beq_inst){
+	armemu_beq(state);
+      }else{
       armemu_b(state);
+      }
     }
     else {
       printf("\n Instruction not found");
