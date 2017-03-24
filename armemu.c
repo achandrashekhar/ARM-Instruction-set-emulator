@@ -13,6 +13,8 @@ int sub(int a, int b);
 int mov(int a, int b);
 int str(int a,int b);
 int b(int a,int b);
+int sum_array(int a,int b);
+int sum_array_real(int *a,int b);
 struct arm_state {
     unsigned int regs[NREGS];
     unsigned int cpsr;
@@ -58,16 +60,21 @@ bool is_add_inst(unsigned int iw)
 
 void armemu_add(struct arm_state *state)
 {
-    unsigned int iw;
+  unsigned int iw,iwimmediate;
     unsigned int rd, rn, rm;
 
     iw = *((unsigned int *) state->regs[PC]);
-    
+    iwimmediate = *((unsigned int *) state->regs[PC]);
     rd = (iw >> 12) & 0xF;
     rn = (iw >> 16) & 0xF;
+    iwimmediate = (iwimmediate>>25) & 0b1;
+    if(iwimmediate==0){
     rm = iw & 0xF;
-
     state->regs[rd] = state->regs[rn] + state->regs[rm];
+    } else {
+      rm = iw & 0xFF;
+      state->regs[rd] = state->regs[rn]+rm;
+    }
     if (rd != PC) {
         state->regs[PC] = state->regs[PC] + 4;
     }
@@ -95,7 +102,7 @@ void armemu_str(struct arm_state *state)
   rn = (iw >> 16) & 0xF;
   rm = iw & 0xF;
 
-  state->regs[rn] = state->regs[rd]; 
+  state->regs[rn] = &state->regs[rd]; 
   if (rd != PC) {
     state->regs[PC] = state->regs[PC] + 4;
   }
@@ -123,7 +130,9 @@ void armemu_ldr(struct arm_state *state)
   rn = (iw >> 16) & 0xF;
   rm = iw & 0xF;
 
-  state->regs[rd]=state->regs[rn];
+   state->regs[rd]= *((unsigned int *) state->regs[rn]);
+  printf("%u is r%d\n",state->regs[rn],rn);
+  //state->regs[rd] = state->regs[rn];
   if (rd != PC) {
     state->regs[PC] = state->regs[PC] + 4;
   }
@@ -142,17 +151,23 @@ bool is_sub_inst(unsigned int iw)
 
 void armemu_sub(struct arm_state *state)
 {
-  unsigned int iw;
+  unsigned int iw,iwimmediate;
   unsigned int rd, rn, rm;
 
   iw = *((unsigned int *) state->regs[PC]);
-
+  iwimmediate = *((unsigned int *) state->regs[PC]);
   rd = (iw >> 12) & 0xF;
   rn = (iw >> 16) & 0xF;
-  rm = iw & 0xF;
+  iwimmediate = (iwimmediate>>25)&0b1;
+  if(iwimmediate==0){
+    rm = iw & 0xF;
+    state->regs[rd] = state->regs[rn] - state->regs[rm];
+  } else{
+    rm = iw & 0xFF;
+    state->regs[rd] = state->regs[rn] - rm;
+  }
 
-  state->regs[rd] = state->regs[rn] - state->regs[rm];
-  if (rd != PC) {
+    if (rd != PC) {
     state->regs[PC] = state->regs[PC] + 4;
   }
 }
@@ -170,16 +185,21 @@ bool is_mov_inst(unsigned int iw)
 
 void armemu_mov(struct arm_state *state)
 {
-  unsigned int iw;
+  unsigned int iw,iwimmediate;
   unsigned int rd, rn, rm;
-
   iw = *((unsigned int *) state->regs[PC]);
-
+  iwimmediate = *((unsigned int *) state->regs[PC]);
   rd = (iw >> 12) & 0xF;
   rn = (iw >> 16) & 0xF;
+  iwimmediate = (iwimmediate>>25)&0b1;
+  if(iwimmediate==0){
   rm = iw & 0xF;
-
   state->regs[rd] = state->regs[rm];
+  } else {
+    rm = iw & 0xFF;
+    state->regs[rd] = rm;
+  }
+  
   if (rd != PC) {
     state->regs[PC] = state->regs[PC] + 4;
   }
@@ -220,7 +240,10 @@ void armemu_cmp(struct arm_state *state)
 
 bool is_b_inst(unsigned int iw)
 {
-  unsigned int b_code;
+  unsigned int b_code,condition_code,temp;
+  temp = iw;
+  condition_code = (temp>>28) & 0b1111;
+  printf("%d is the condition code",condition_code);
 
   b_code = (iw >> 25) & 0b111;
 
@@ -229,15 +252,16 @@ bool is_b_inst(unsigned int iw)
 
 bool is_beq_inst(unsigned int iw)
 {
+  printf("\n goes inside this fuckall function");
   unsigned int beq_code;
 
   beq_code = (iw >> 28) & 0b1111;
-
   return (beq_code==0b0000);
 }
 
 void armemu_beq(struct arm_state *state)
 {
+  printf("\ngoes inside the armemu_beq function");
   unsigned int iw,z_check_bit;
   unsigned int rd, rn, rm,result;
 
@@ -254,7 +278,7 @@ void armemu_beq(struct arm_state *state)
 
 void armemu_b(struct arm_state *state)
 {
-  printf("going here");
+  printf("\ngoing inside armemu_b function");
   unsigned int offset_check,offset_address,offset_check_bit;
   offset_check = *((unsigned int *) state->regs[PC]);
   offset_check = offset_check & 0x00FFFFFF;
@@ -266,7 +290,7 @@ void armemu_b(struct arm_state *state)
       offset_address = 0x00000000|offset_check;
     }
     offset_address = (offset_address<<2);
-    printf("\n %d is the offset address ",offset_address);
+    printf("\n %x is the offset address ",offset_address);
     state->regs[PC]=state->regs[PC]+8+offset_address;  
 }
 
@@ -292,10 +316,9 @@ void armemu_bx(struct arm_state *state)
 
 void armemu_one(struct arm_state *state)
 {
-    unsigned int iw;
-    
+  unsigned int iw,check_code;
     iw = *((unsigned int *) state->regs[PC]);
-
+    check_code = *((unsigned int *) state->regs[PC]);
     if (is_bx_inst(iw)) {
         armemu_bx(state);
     } else if (is_add_inst(iw)) {
@@ -317,9 +340,12 @@ void armemu_one(struct arm_state *state)
       armemu_cmp(state);
     }
     else if(is_b_inst(iw)){
-      if(is_beq_inst){
+      printf("\nis going in the arm_one statement");
+      if(is_beq_inst(check_code)){
+	printf("\ngoes to arm_one beq");
 	armemu_beq(state);
       }else{
+	printf("\ngoes to arm_one b");
       armemu_b(state);
       }
     }
@@ -344,12 +370,13 @@ int main(int argc, char **argv)
 {
     struct arm_state state;
     unsigned int r;
-    
+    int arr[] = {1,1,1,1,1};
     //init_arm_state(&state, (unsigned int *) add, 1, 2, 0, 0);
     //init_arm_state(&state, (unsigned int *) sub, 2, 1, 0, 0);
-    //init_arm_state(&state, (unsigned int *) mov, 2, 1, 0, 0);
-    //init_arm_state(&state, (unsigned int *) str, 1, 4, 0, 0);  
-    init_arm_state(&state, (unsigned int *) b, 1, 1, 0, 0);  
+    // init_arm_state(&state, (unsigned int *) str, 0, 5, 0, 0);
+    init_arm_state(&state, (unsigned int *) sum_array_real, arr, 5, 0, 0);  
+    //init_arm_state(&state, (unsigned int *) b, 0, 3, 0, 0);
+    //    init_arm_state(&state, (unsigned int *) mov, 0, 0, 0, 0); 
     r = armemu(&state);
     printf("r = %d\n", r);
   

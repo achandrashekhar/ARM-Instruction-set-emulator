@@ -1,7 +1,8 @@
 .global str
 .func str
 
-str:
-	str r1, [r4]
-	ldr r0, [r4]
+str:	sub sp,sp,#8
+	str r1,[sp]
+	ldr r0,[sp]
+	add sp,sp,#8
 	bx lr

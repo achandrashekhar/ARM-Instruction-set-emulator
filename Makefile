@@ -15,9 +15,15 @@ str.o : str.s
 b.o : b.s
 	as -o b.o b.s
 
-armemu : armemu.c b.o
-	gcc -o armemu armemu.c b.o
+sum_array.o : sum_array.s
+	as -o sum_array.o sum_array.s 
+
+sum_array_real.o : sum_array_real.s
+	as -o sum_array_real.o sum_array_real.s
+
+armemu : armemu.c sum_array_real.o
+	gcc -o armemu armemu.c sum_array_real.o
 
 clean:
-	rm -rf armemu b.o
+	rm -rf armemu sum_array_real.o
 
