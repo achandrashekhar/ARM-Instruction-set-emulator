@@ -24,8 +24,11 @@ sum_array_real.o : sum_array_real.s
 find_max.o : find_max.s
 	as -o find_max.o find_max.s
 
-armemu : armemu.c find_max.o
-	gcc -o armemu armemu.c find_max.o
+find_str.o : find_str.s
+	as -o find_str.o find_str.s
+
+armemu : armemu.c find_str.o
+	gcc -o armemu armemu.c find_str.o
 
 clean:
 	rm -rf armemu sum_array_real.o

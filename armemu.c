@@ -16,6 +16,7 @@ int b(int a,int b);
 int sum_array(int a,int b);
 int sum_array_real(int *a,int b);
 int find_max(int *a,int b);
+int find_str(char *s1,char *s2);
 struct arm_state {
     unsigned int regs[NREGS];
     unsigned int cpsr;
@@ -122,16 +123,22 @@ bool is_ldr_inst(unsigned int iw)
 
 void armemu_ldr(struct arm_state *state)
 {
-  unsigned int iw;
+  unsigned int iw,iwimmediate;
   unsigned int rd, rn, rm;
 
   iw = *((unsigned int *) state->regs[PC]);
-
+  iwimmediate = *((unsigned int *) state->regs[PC]);
+  iwimmediate = (iwimmediate>>22)&0b1;
+  
   rd = (iw >> 12) & 0xF;
   rn = (iw >> 16) & 0xF;
+  if(iwimmediate==0) {
   rm = iw & 0xF;
-
    state->regs[rd]= *((unsigned int *) state->regs[rn]);
+  }else {
+    rm = iw & 0xFF;
+    state->regs[rd] = *((char *)state->regs[rn]+rm);
+  }
    //  printf("%u is r%d\n",state->regs[rn],rn);
   //state->regs[rd] = state->regs[rn];
   if (rd != PC) {
@@ -266,17 +273,24 @@ bool is_cmp_inst(unsigned int iw)
 
 void armemu_cmp(struct arm_state *state)
 {
-  unsigned int iw;
+  unsigned int iw,iwimmediate;
   unsigned int rd, rn, rm;
   int result;
 
   iw = *((unsigned int *) state->regs[PC]);
-
+  iwimmediate = *((unsigned int *) state->regs[PC]);
   rd = (iw >> 12) & 0xF;
   rn = (iw >> 16) & 0xF;
-  rm = iw & 0xF;
 
+  iwimmediate = (iwimmediate>>25)&0b1;
+  
+  if(iwimmediate==0){ 
+  rm = iw & 0xF;
   result= state->regs[rn] - state->regs[rm];
+  }else{
+    rm = iw & 0xFF;
+    result= state->regs[rn] - rm;
+  }
   if(result==0){
     printf("\nresult is 0 == %d?",result);
     state->cpsr = state->cpsr|0x40000000;
@@ -457,9 +471,23 @@ int main(int argc, char **argv)
     // init_arm_state(&state, (unsigned int *) str, 0, 5, 0, 0);
     //init_arm_state(&state, (unsigned int *) sum_array_real, arr, 5, 0, 0);  
     //init_arm_state(&state, (unsigned int *) b, 0, 3, 0, 0);
+
+
+    /*
     init_arm_state(&state, (unsigned int *) find_max, arr, 3, 0, 0); 
     r = armemu(&state);
     printf("r = %d\n", r);
+    */
+
+    char s[]="abc";
+    char ss[]="bc";
+
+    char snf[]="fff";
+    int n;
+    n=find_str(s,snf);
+    printf("\nAssembly");
+    printf("\nfor string %s and the substring %s, the index found was %d",s,ss,n);
+    
   
     return 0;
 }
