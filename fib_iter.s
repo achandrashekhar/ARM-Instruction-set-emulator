@@ -8,7 +8,7 @@ fib_iter:
 	cmp r0,#0
 	beq return_a0
 
-loop:		cmp r4,r0
+loop:	cmp r4,r0
 	beq done2
 	add r3,r1,r2
 	mov r1,r2
