@@ -36,7 +36,7 @@ test1.o : test1.s
 fib_iter.o : fib_iter.s
 	as -o fib_iter.o fib_iter.s
 
-armemu : armemu.c sum_array_real.o
+armemu : armemu.c sum_array_real.o find_max.o
 	gcc -o armemu armemu.c sum_array_real.o find_max.o
 
 clean:

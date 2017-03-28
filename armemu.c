@@ -285,7 +285,6 @@ void armemu_mov(struct arm_state *state)
   if(iwimmediate==0){
   rm = iw & 0xF;
   state->regs[rd] = state->regs[rm];
-  printf("%u\n",state->regs[rd]);
   } else {
     rm = iw & 0xFF;
     state->regs[rd] = rm;
@@ -599,6 +598,16 @@ double get_time(struct tms *t1, struct tms *t2)
   total_secs = ((double) (t2->tms_utime - t1->tms_utime)) / ((double) ticks_per_second);
   return total_secs;
 }
+
+void print_report(struct arm_state *state)
+{
+  printf("Total instructions executed = %d\n",state->instruction_count);
+  printf("Data Processing instructions executed = %d\n",state->data_processing_instruction_count);
+  printf("Memory instructions executed = %d\n",state->memory_instruction_count );
+  printf("Branch instructions executed = %d\n",state->branch_instruction_count);
+  printf("branch not taken = %d\n",state->branch_not_taken);
+  printf("branch taken = %d\n",state->branch_taken);
+}
                   
     
 int main(int argc, char **argv)
@@ -610,6 +619,12 @@ int main(int argc, char **argv)
     double total_secs = 0.0;
     int arr[] = {-5,-3,-4};
     int arr2[] = {1,1,1};
+    int a0[5]={0,0,0,0,0};
+    int arrthousand[1000];
+    int len = 1000;
+    for(i=0;i<len;i++){
+      arrthousand[i]=1;
+    }
     //init_arm_state(&state, (unsigned int *) add, 1, 2, 0, 0);
     //init_arm_state(&state, (unsigned int *) sub, 2, 1, 0, 0);
     // init_arm_state(&state, (unsigned int *) str, 0, 5, 0, 0);
@@ -619,6 +634,7 @@ int main(int argc, char **argv)
     // init_arm_state(&state, (unsigned int *) fib_recur, 8, 0, 0, 0);   
      //init_arm_state(&state, (unsigned int *) find_max, arr, 3, 0, 0);
 
+    //array with 3 elements
     times(&t1);
     for(i = 0;i<ITERS;i++){
       r = sum_array_real(arr2, 3);
@@ -635,15 +651,29 @@ int main(int argc, char **argv)
     times(&t2);
     total_secs = get_time(&t1,&t2);
     printf("r = %d\n", r);
-    printf("total_secs = %lf\n", total_secs);
-    printf("Total instructions executed = %d\n",state.instruction_count);
-    printf("Data Processing instructions executed = %d\n",state.data_processing_instruction_count);
-    printf("Memory instructions executed = %d\n",state.memory_instruction_count);
-    printf("Branch instructions executed = %d\n",state.branch_instruction_count);
-    printf("branch not taken = %d\n",state.branch_not_taken);
-    printf("branch taken = %d\n",state.branch_taken);
+    printf("total_secs for armemu = %lf\n", total_secs);
+    print_report(&state);
 
-    /*
+    //array with thousand elements
+    times(&t1);
+    for(i = 0;i<10;i++){
+      r = sum_array_real(arrthousand, 1000);
+    }
+    times(&t2);
+    total_secs = get_time(&t1,&t2);
+    printf("total_secs for native = %lf\n", total_secs);
+    total_secs = 0.0;
+    times(&t1);
+    for(i = 0;i<10;i++){
+     init_arm_state(&state, (unsigned int *) sum_array_real, arrthousand, 1000, 0, 0);
+      r = armemu(&state);
+    }
+    times(&t2);
+    total_secs = get_time(&t1,&t2);
+    printf("r = %d\n", r);
+    printf("total_secs for armemu = %lf\n", total_secs);
+    print_report(&state);
+    
     
     /*
     init_arm_state(&state, (unsigned int *) find_max, arr, 3, 0, 0);
