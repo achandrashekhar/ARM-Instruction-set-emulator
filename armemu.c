@@ -10,14 +10,7 @@
 #define LR 14
 #define PC 15
 #define ITERS 1000
-/*
-int instruction_count = 0;
-int data_processing_instruction_count = 0;
-int branch_instruction_count = 0;
-int memory_instruction_count = 0;
-int branch_taken = 0;
-int branch_not_taken = 0;
-*/	     
+	     
 int add(int a, int b);
 int sub(int a, int b);
 int mov(int a, int b);
@@ -137,11 +130,8 @@ void armemu_str_second(struct arm_state *state)
   immediate = *((unsigned int *) state->regs[PC]);
   rd = (iw >> 12) & 0xF;
   rn = (iw >> 16) & 0xF;
-  
-  //  state->regs[rn] = &state->regs[rd];
 
   *((unsigned int *)state->regs[rn]) = state->regs[rd];
-  //  state->regs[rn]= &state->regs[rd];
 
   state->write_register[rn]=1;
   state->read_register[rd]=1;
@@ -226,16 +216,10 @@ void armemu_ldr(struct arm_state *state)
   rn = (iw >> 16) & 0xF;
   if(b_or_word==0) {
     state->regs[rd]= *((unsigned int *) state->regs[rn]);
-    // printf("%u is r%d\n",state->regs[rd],rd);  
-    //state->regs[rd] = state->regs[rn];
   }else {
     rm = iw & 0xF;
     state->regs[rd] = *((char *)state->regs[rn]+rm);
-    //value = *((char *)state->regs[rn]+offset);
-    //state->regs[rd] = (unsigned int)value;
   }
-  //     printf("%u is r%d\n",state->regs[rn],rn);
-  //state->regs[rd] = state->regs[rn];
 
   state->write_register[rd]=1;
   state->read_register[rn]=1;
@@ -417,8 +401,6 @@ bool is_b_inst(unsigned int iw)
   unsigned int b_code,condition_code,temp;
   temp = iw;
   condition_code = (temp>>28) & 0b1111;
-  //printf("%d is the condition code",condition_code);
-
   b_code = (iw >> 25) & 0b111;
 
   return (b_code==0b101);
@@ -426,7 +408,7 @@ bool is_b_inst(unsigned int iw)
 
 bool is_beq_inst(unsigned int iw)
 {
-  //printf("\n goes inside this fuckall function");
+  
   unsigned int beq_code;
 
   beq_code = (iw >> 28) & 0b1111;
@@ -436,7 +418,6 @@ bool is_beq_inst(unsigned int iw)
 void armemu_beq(struct arm_state *state)
 {
   state->branch_instruction_count++;
-  //printf("\ngoes inside the armemu_beq function");
   unsigned int iw,z_check_bit;
   unsigned int rd, rn, rm,result;
 
@@ -456,7 +437,6 @@ void armemu_beq(struct arm_state *state)
 void armemu_blt(struct arm_state *state)
 {
   state->branch_instruction_count++;
-  //printf("\ngoes inside the armemu_beq function");
   unsigned int iw,n_check_bit,v_check_bit;
   unsigned int rd, rn, rm,result;
 
@@ -477,7 +457,7 @@ void armemu_blt(struct arm_state *state)
 
 void armemu_b(struct arm_state *state)
 {
-  //printf("\ngoing inside armemu_b function");
+ 
   unsigned int offset_check,offset_address,offset_check_bit,link_bit;
   link_bit = *((unsigned int *) state->regs[PC]);
   offset_check = *((unsigned int *) state->regs[PC]);
@@ -490,7 +470,6 @@ void armemu_b(struct arm_state *state)
       offset_address = 0x00000000|offset_check;
     }
     offset_address = (offset_address<<2);
-    //printf("\n %x is the offset address ",offset_address);
     link_bit = (link_bit>>24) & 0b1;
     if(link_bit==1){
       state->regs[LR] = state->regs[PC]+4;
@@ -590,16 +569,13 @@ void armemu_one(struct arm_state *state)
       state->instruction_count++;
     }
     else if(is_b_inst(iw)){
-      //printf("\nis going in the arm_one statement");
       if(is_beq_inst(check_code)){
-	//printf("\ngoes to arm_one beq");
 	armemu_beq(state);
 	state->instruction_count++;
       } else if(is_lt_inst(check_code)){
 	armemu_blt(state);
 	state->instruction_count++;
       } else{
-	//printf("\ngoes to arm_one b");
       armemu_b(state);
       state->instruction_count++;
       state->branch_instruction_count++;
@@ -674,15 +650,6 @@ int main(int argc, char **argv)
     for(i=0;i<len;i++){
       arrthousand[i]=1;
     }
-    //init_arm_state(&state, (unsigned int *) add, 1, 2, 0, 0);
-    //init_arm_state(&state, (unsigned int *) sub, 2, 1, 0, 0);
-    // init_arm_state(&state, (unsigned int *) str, 0, 5, 0, 0);
-    //init_arm_state(&state, (unsigned int *) sum_array_real, arr2, 3, 0, 0);  
-    //init_arm_state(&state, (unsigned int *) b, 0, 3, 0, 0);
-    int num = 4;
-    // init_arm_state(&state, (unsigned int *) fib_recur, 8, 0, 0, 0);   
-     //init_arm_state(&state, (unsigned int *) find_max, arr, 3, 0, 0);
-
     
     
     //array with 3 elements
