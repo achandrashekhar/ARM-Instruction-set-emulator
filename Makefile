@@ -27,8 +27,17 @@ find_max.o : find_max.s
 find_str.o : find_str.s
 	as -o find_str.o find_str.s
 
-armemu : armemu.c find_str.o
-	gcc -o armemu armemu.c find_str.o
+fib_recur.o : fib_recur.s
+	as -o fib_recur.o fib_recur.s
+
+test1.o : test1.s
+	as -o test1.o test1.s
+
+fib_iter.o : fib_iter.s
+	as -o fib_iter.o fib_iter.s
+
+armemu : armemu.c sum_array_real.o
+	gcc -o armemu armemu.c sum_array_real.o find_max.o
 
 clean:
 	rm -rf armemu sum_array_real.o
