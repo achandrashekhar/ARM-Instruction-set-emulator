@@ -620,6 +620,7 @@ int main(int argc, char **argv)
     int arr[] = {-5,-3,-4};
     int arr2[] = {1,1,1};
     int a0[5]={0,0,0,0,0};
+    int mixed[3] = {-5,4,5};
     int arrthousand[1000];
     int len = 1000;
     for(i=0;i<len;i++){
@@ -654,6 +655,46 @@ int main(int argc, char **argv)
     printf("total_secs for armemu = %lf\n", total_secs);
     print_report(&state);
 
+    //array with 0 elements
+    times(&t1);
+    for(i = 0;i<ITERS;i++){
+      r = sum_array_real(a0, 5);
+    }
+    times(&t2);
+    total_secs = get_time(&t1,&t2);
+    printf("total_secs for native = %lf\n", total_secs);
+    total_secs = 0.0;
+    times(&t1);
+    for(i = 0;i<ITERS;i++){
+      init_arm_state(&state, (unsigned int *) sum_array_real, a0, 5, 0, 0);
+      r = armemu(&state);
+    }
+    times(&t2);
+    total_secs = get_time(&t1,&t2);
+    printf("r = %d\n", r);
+    printf("total_secs for armemu = %lf\n", total_secs);
+    print_report(&state);
+
+    //array with mixed elements
+    times(&t1);
+    for(i = 0;i<ITERS;i++){
+      r = sum_array_real(arr2, 3);
+    }
+    times(&t2);
+    total_secs = get_time(&t1,&t2);
+    printf("total_secs for native = %lf\n", total_secs);
+    total_secs = 0.0;
+    times(&t1);
+    for(i = 0;i<ITERS;i++){
+      init_arm_state(&state, (unsigned int *) sum_array_real, mixed, 3, 0, 0);
+      r = armemu(&state);
+    }
+    times(&t2);
+    total_secs = get_time(&t1,&t2);
+    printf("r = %d\n", r);
+    printf("total_secs for armemu = %lf\n", total_secs);
+    print_report(&state);
+
     //array with thousand elements
     times(&t1);
     for(i = 0;i<10;i++){
@@ -673,7 +714,28 @@ int main(int argc, char **argv)
     printf("r = %d\n", r);
     printf("total_secs for armemu = %lf\n", total_secs);
     print_report(&state);
-    
+
+
+    //FIB_RECUR REPORT
+
+    times(&t1);
+    for(i = 0;i<100;i++){
+      r = fib_recur(10);
+    }
+    times(&t2);
+    total_secs = get_time(&t1,&t2);
+    printf("total_secs for native fib_recur = %lf\n", total_secs);
+    total_secs = 0.0;
+    times(&t1);
+    for(i = 0;i<100;i++){
+      init_arm_state(&state, (unsigned int *) fib_recur, 10, 0, 0, 0);
+      r = armemu(&state);
+    }
+    times(&t2);
+    total_secs = get_time(&t1,&t2);
+    printf("r = %d\n", r);
+    printf("total_secs for armemu fib_recur = %lf\n", total_secs);
+    print_report(&state);
     
     /*
     init_arm_state(&state, (unsigned int *) find_max, arr, 3, 0, 0);
