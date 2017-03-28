@@ -1,0 +1,132 @@
+------------3 ELEMENTS SUM_ARRAY------------
+total_secs for native = 0.000000
+r = 3
+total_secs for armemu = 0.040000
+Total instructions executed = 31
+Data Processing instructions executed = 18
+Memory instructions executed = 5
+Branch instructions executed = 8
+branch not taken = 3
+branch taken = 5
+Read from registers	r0	r2	r3	r4	r13
+Written from registers 	r0	r2	r3	r4	r13
+------------ALL ELEMENTS 0 SUM_ARRAY------------
+total_secs for native = 0.000000
+r = 0
+total_secs for armemu = 0.050000
+Total instructions executed = 45
+Data Processing instructions executed = 26
+Memory instructions executed = 7
+Branch instructions executed = 12
+branch not taken = 5
+branch taken = 7
+Read from registers	r0	r2	r3	r4	r13
+Written from registers 	r0	r2	r3	r4	r13
+------------MIXED ELEMENTS SUM_ARRAY------------
+total_secs for native = 0.000000
+r = 4
+total_secs for armemu = 0.030000
+Total instructions executed = 31
+Data Processing instructions executed = 18
+Memory instructions executed = 5
+Branch instructions executed = 8
+branch not taken = 3
+branch taken = 5
+Read from registers	r0	r2	r3	r4	r13
+Written from registers 	r0	r2	r3	r4	r13
+------------1000 ELEMENTS SUM_ARRAY------------
+total_secs for native = 0.000000
+r = 1000
+total_secs for armemu = 0.020000
+Total instructions executed = 7010
+Data Processing instructions executed = 4006
+Memory instructions executed = 1002
+Branch instructions executed = 2002
+branch not taken = 1000
+branch taken = 1002
+Read from registers	r0	r2	r3	r4	r13
+Written from registers 	r0	r2	r3	r4	r13
+------------FIB RECUR 10------------
+total_secs for native fib_recur = 0.000000
+r = 55
+total_secs for armemu fib_recur = 0.070000
+Total instructions executed = 2735
+Data Processing instructions executed = 1499
+Memory instructions executed = 706
+Branch instructions executed = 530
+branch not taken = 88
+branch taken = 442
+Read from registers	r0	r13	r14
+Written from registers 	r0	r1	r13	r14
+------------FIB RECUR 19------------
+total_secs for native fib_recur = 0.020000
+r = 4181
+total_secs for armemu fib_recur = 5.170000
+Total instructions executed = 209691
+Data Processing instructions executed = 114991
+Memory instructions executed = 54114
+Branch instructions executed = 40586
+branch not taken = 6764
+branch taken = 33822
+Read from registers	r0	r13	r14
+Written from registers 	r0	r1	r13	r14
+------------FIB ITER 10------------
+total_secs for native fib_recur = 0.000000
+r = 55
+total_secs for armemu fib_recur = 0.000000
+Total instructions executed = 72
+Data Processing instructions executed = 51
+Memory instructions executed = 0
+Branch instructions executed = 21
+branch not taken = 10
+branch taken = 11
+Read from registers	r0	r1	r2	r3	r4
+Written from registers 	r0	r1	r2	r3	r4
+------------FIB ITER 19------------
+total_secs for native fib_iter = 0.030000
+r = 4181
+total_secs for armemu fib_iter = 0.000000
+Total instructions executed = 135
+Data Processing instructions executed = 96
+Memory instructions executed = 0
+Branch instructions executed = 39
+branch not taken = 19
+branch taken = 20
+Read from registers	r0	r1	r2	r3	r4
+Written from registers 	r0	r1	r2	r3	r4
+------------FIND MAX ALL NEGATIVE------------
+total_secs for native find_max all negative values = 0.000000
+r = -3
+total_secs for armemu find_max for all negative values = 0.020000
+Total instructions executed = 30
+Data Processing instructions executed = 21
+Memory instructions executed = 5
+Branch instructions executed = 6
+branch not taken = 2
+branch taken = 4
+Read from registers	r0	r2	r3	r4	r13
+Written from registers 	r0	r2	r3	r4	r13
+------------1000 ELEMENTS FIND_MAX------------
+total_secs for native find_max= 0.010000
+r = 1
+total_secs for armemu find_max = 0.250000
+Total instructions executed = 9003
+Data Processing instructions executed = 6001
+Memory instructions executed = 1002
+Branch instructions executed = 2000
+branch not taken = 999
+branch taken = 1001
+Read from registers	r0	r2	r3	r4	r13
+Written from registers 	r0	r2	r3	r4	r13
+------------FIND_MAX ALL 0s------------
+total_secs for native find_max with all 0s = 0.000000
+r = 0
+total_secs for armemu for find_max with all 0s= 0.030000
+Total instructions executed = 48
+Data Processing instructions executed = 31
+Memory instructions executed = 7
+Branch instructions executed = 10
+branch not taken = 4
+branch taken = 6
+Read from registers	r0	r2	r3	r4	r13
+Written from registers 	r0	r2	r3	r4	r13	

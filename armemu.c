@@ -34,6 +34,8 @@ struct arm_state {
     unsigned int regs[NREGS];
     unsigned int cpsr;
     unsigned char stack[STACK_SIZE];
+  int read_register[NREGS];
+  int write_register[NREGS];
   int instruction_count;
   int data_processing_instruction_count;
   int branch_instruction_count;
@@ -51,6 +53,8 @@ void init_arm_state(struct arm_state *as, unsigned int *func,
     /* zero out all arm state */
     for (i = 0; i < NREGS; i++) {
         as->regs[i] = 0;
+	as->read_register[i]=0;
+	as->write_register[i]=0;
     }
 
     as->cpsr = 0;
@@ -105,6 +109,8 @@ void armemu_add(struct arm_state *state)
       rm = iw & 0xFF;
       state->regs[rd] = state->regs[rn]+rm;
     }
+    state->write_register[rd]=1;
+    state->read_register[rn]=1;
     if (rd != PC) {
         state->regs[PC] = state->regs[PC] + 4;
     }
@@ -136,6 +142,9 @@ void armemu_str_second(struct arm_state *state)
 
   *((unsigned int *)state->regs[rn]) = state->regs[rd];
   //  state->regs[rn]= &state->regs[rd];
+
+  state->write_register[rn]=1;
+  state->read_register[rd]=1;
   
   if (rd != PC) {
     state->regs[PC] = state->regs[PC] + 4;
@@ -177,6 +186,10 @@ void armemu_str(struct arm_state *state)
       //*((unsigned int *)state->regs[rn]) = state->regs[rd];
     state->regs[rn] = (unsigned int) &state->regs[rd];
   }
+
+  state->write_register[rd]=1;
+  state->read_register[rn]=1;
+  
   if (rd != PC) {
     state->regs[PC] = state->regs[PC] + 4;
   }
@@ -195,11 +208,12 @@ bool is_ldr_inst(unsigned int iw)
 
 void armemu_ldr(struct arm_state *state)
 {
+  
   state->memory_instruction_count++;
-  unsigned int iw,iwimmediate,b_or_word,immediate,offset_addr;
+  unsigned int iw,iwimmediate,b_or_word,immediate,offset_addr,offset;
   unsigned int rd, rn, rm;
   //unsigned int *addr;
-
+  char value;
   iw = *((unsigned int *) state->regs[PC]);
 
   b_or_word = *((unsigned int *) state->regs[PC]);
@@ -215,11 +229,17 @@ void armemu_ldr(struct arm_state *state)
     // printf("%u is r%d\n",state->regs[rd],rd);  
     //state->regs[rd] = state->regs[rn];
   }else {
-    rm = iw & 0xFF;
+    rm = iw & 0xF;
     state->regs[rd] = *((char *)state->regs[rn]+rm);
+    //value = *((char *)state->regs[rn]+offset);
+    //state->regs[rd] = (unsigned int)value;
   }
   //     printf("%u is r%d\n",state->regs[rn],rn);
   //state->regs[rd] = state->regs[rn];
+
+  state->write_register[rd]=1;
+  state->read_register[rn]=1;
+  
   if (rd != PC) {
     state->regs[PC] = state->regs[PC] + 4;
   }
@@ -255,6 +275,9 @@ void armemu_sub(struct arm_state *state)
     state->regs[rd] = state->regs[rn] - rm;
   }
 
+  state->write_register[rd]=1;
+  state->read_register[rn]=1;
+
     if (rd != PC) {
     state->regs[PC] = state->regs[PC] + 4;
   }
@@ -285,10 +308,15 @@ void armemu_mov(struct arm_state *state)
   if(iwimmediate==0){
   rm = iw & 0xF;
   state->regs[rd] = state->regs[rm];
+  state->write_register[rd]=1;
+  state->read_register[rm]=1;
   } else {
     rm = iw & 0xFF;
     state->regs[rd] = rm;
+    state->write_register[rd]=1;
   }
+
+ 
   
   if (rd != PC) {
     state->regs[PC] = state->regs[PC] + 4;
@@ -375,6 +403,10 @@ void armemu_cmp(struct arm_state *state)
   if(result>0) {
     state->cpsr = state->cpsr | 0x00000000;
   }
+
+  state->read_register[rd]=1;
+  state->read_register[rn]=1;
+  
   if (rd != PC) {
     state->regs[PC] = state->regs[PC] + 4;
   }
@@ -601,12 +633,28 @@ double get_time(struct tms *t1, struct tms *t2)
 
 void print_report(struct arm_state *state)
 {
+  
+  int i=0;
   printf("Total instructions executed = %d\n",state->instruction_count);
   printf("Data Processing instructions executed = %d\n",state->data_processing_instruction_count);
   printf("Memory instructions executed = %d\n",state->memory_instruction_count );
   printf("Branch instructions executed = %d\n",state->branch_instruction_count);
   printf("branch not taken = %d\n",state->branch_not_taken);
   printf("branch taken = %d\n",state->branch_taken);
+  printf("Read from registers \t");
+  for(i=0;i<NREGS;i++){
+    if(state->read_register[i]==1){
+    printf("r%d\t",i);
+    }
+  }
+  printf("\n");
+  printf("Written from registers \t");
+  for(i=0;i<NREGS;i++){
+    if(state->write_register[i]==1){
+      printf("r%d\t",i);
+    }
+  }
+  printf("\n");
 }
                   
     
@@ -635,6 +683,8 @@ int main(int argc, char **argv)
     // init_arm_state(&state, (unsigned int *) fib_recur, 8, 0, 0, 0);   
      //init_arm_state(&state, (unsigned int *) find_max, arr, 3, 0, 0);
 
+    
+    
     //array with 3 elements
     times(&t1);
     for(i = 0;i<ITERS;i++){
@@ -642,6 +692,7 @@ int main(int argc, char **argv)
     }
     times(&t2);
     total_secs = get_time(&t1,&t2);
+    printf("------------3 ELEMENTS SUM_ARRAY------------\n");
     printf("total_secs for native = %lf\n", total_secs);
     total_secs = 0.0;
     times(&t1);
@@ -662,6 +713,7 @@ int main(int argc, char **argv)
     }
     times(&t2);
     total_secs = get_time(&t1,&t2);
+    printf("------------ALL ELEMENTS 0 SUM_ARRAY------------\n");
     printf("total_secs for native = %lf\n", total_secs);
     total_secs = 0.0;
     times(&t1);
@@ -682,6 +734,7 @@ int main(int argc, char **argv)
     }
     times(&t2);
     total_secs = get_time(&t1,&t2);
+    printf("------------MIXED ELEMENTS SUM_ARRAY------------\n");
     printf("total_secs for native = %lf\n", total_secs);
     total_secs = 0.0;
     times(&t1);
@@ -702,6 +755,7 @@ int main(int argc, char **argv)
     }
     times(&t2);
     total_secs = get_time(&t1,&t2);
+    printf("------------1000 ELEMENTS SUM_ARRAY------------\n");
     printf("total_secs for native = %lf\n", total_secs);
     total_secs = 0.0;
     times(&t1);
@@ -724,6 +778,7 @@ int main(int argc, char **argv)
     }
     times(&t2);
     total_secs = get_time(&t1,&t2);
+    printf("------------FIB RECUR 10------------\n");
     printf("total_secs for native fib_recur = %lf\n", total_secs);
     total_secs = 0.0;
     times(&t1);
@@ -743,6 +798,7 @@ int main(int argc, char **argv)
     }
     times(&t2);
     total_secs = get_time(&t1,&t2);
+    printf("------------FIB RECUR 19------------\n");
     printf("total_secs for native fib_recur = %lf\n", total_secs);
     total_secs = 0.0;
     times(&t1);
@@ -763,6 +819,7 @@ int main(int argc, char **argv)
     }
     times(&t2);
     total_secs = get_time(&t1,&t2);
+    printf("------------FIB ITER 10------------\n");
     printf("total_secs for native fib_recur = %lf\n", total_secs);
     total_secs = 0.0;
     times(&t1);
@@ -783,6 +840,7 @@ int main(int argc, char **argv)
     }
     times(&t2);
     total_secs = get_time(&t1,&t2);
+    printf("------------FIB ITER 19------------\n");
     printf("total_secs for native fib_iter = %lf\n", total_secs);
     total_secs = 0.0;
     times(&t1);
@@ -804,7 +862,8 @@ int main(int argc, char **argv)
     }
     times(&t2);
     total_secs = get_time(&t1,&t2);
-    printf("total_secs for native = %lf\n", total_secs);
+    printf("------------FIND MAX ALL NEGATIVE------------\n");
+    printf("total_secs for native find_max all negative values = %lf\n", total_secs);
     total_secs = 0.0;
     times(&t1);
     for(i = 0;i<ITERS;i++){
@@ -814,28 +873,51 @@ int main(int argc, char **argv)
     times(&t2);
     total_secs = get_time(&t1,&t2);
     printf("r = %d\n", r);
-    printf("total_secs for armemu = %lf\n", total_secs);
+    printf("total_secs for armemu find_max for all negative values = %lf\n", total_secs);
     print_report(&state);
 
     //find Max for thousand elements
-    
-    
-    /*
-    init_arm_state(&state, (unsigned int *) find_max, arr, 3, 0, 0);
-    r = armemu(&state);
+    times(&t1);
+    for(i = 0;i<ITERS;i++){
+      r = find_max(arrthousand, 1000);
+    }
+    times(&t2);
+    total_secs = get_time(&t1,&t2);
+    printf("------------1000 ELEMENTS FIND_MAX------------\n");
+    printf("total_secs for native find_max= %lf\n", total_secs);
+    total_secs = 0.0;
+    times(&t1);
+    for(i = 0;i<100;i++){
+      init_arm_state(&state, (unsigned int *) find_max, arrthousand, 1000, 0, 0);
+      r = armemu(&state);
+    }
+    times(&t2);
+    total_secs = get_time(&t1,&t2);
     printf("r = %d\n", r);
-    */
+    printf("total_secs for armemu find_max = %lf\n", total_secs);
+    print_report(&state);
+
+    //FIND MAX FOR all 0s
+    times(&t1);
+    for(i = 0;i<ITERS;i++){
+      r = find_max(a0, 5);
+    }
+    times(&t2);
+    total_secs = get_time(&t1,&t2);
+    printf("------------FIND_MAX ALL 0s------------\n");
+    printf("total_secs for native find_max with all 0s = %lf\n", total_secs);
+    total_secs = 0.0;
+    times(&t1);
+    for(i = 0;i<ITERS;i++){
+      init_arm_state(&state, (unsigned int *) find_max, a0, 5, 0, 0);
+      r = armemu(&state);
+    }
+    times(&t2);
+    total_secs = get_time(&t1,&t2);
+    printf("r = %d\n", r);
+    printf("total_secs for armemu for find_max with all 0s= %lf\n", total_secs);
+    print_report(&state);
    
     
-    /*    
-    char s[]="abc";
-    char ss[]="bc";
-
-    char snf[]="fff";
-    int n;
-    n=find_str(s,ss);
-    printf("\nAssembly");
-    printf("\nfor string %s and the substring %s, the index found was %d",s,ss,n);
-    */
     return 0;
 }
