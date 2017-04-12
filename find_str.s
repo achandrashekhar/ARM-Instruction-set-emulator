@@ -20,7 +20,8 @@ done_length2:		sub r8,r8,#1
 
 	mov r2,#0
 	mov r3,#0
-	mov r4,#-1
+	mov r4,#0
+	sub r4,r4,#1
 
 loop3:		cmp r2,r9
 	beq done
